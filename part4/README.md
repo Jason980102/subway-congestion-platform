@@ -98,7 +98,7 @@ The final reports for all four project phases are available in `docs/`:
 - `Jason_Chen_p1_su26.docx`
 - `Jason_Chen_p2_su26.docx`
 - `Jason_Chen_p3_su26.docx`
-- `Jason_Chen_p4_su26.docx`
+- `Jason_Chen_final-project_su26.docx`
 
 The Part IV report contains the integrated workflow, implementation evidence, query-plan results, limitations, and updated reference architecture.
 
