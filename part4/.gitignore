@@ -3,6 +3,7 @@
 __pycache__/
 *.pyc
 artifacts/congestion_model_retrained.joblib
+artifacts/pipeline_runs/
 ~$*.docx
 docs/Database_Project_Part_IV_Report.docx
 docs/Jason_Chen_p4_su26_FINAL_CANDIDATE.docx

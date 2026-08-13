@@ -54,7 +54,7 @@ def load_and_validate_csv(csv_path: Path) -> pd.DataFrame:
     return frame
 
 
-def load_ridership() -> None:
+def load_ridership() -> dict[str, int]:
     csv_setting = os.getenv("CSV_PATH")
     if not csv_setting:
         raise RuntimeError("Missing required setting: CSV_PATH")
@@ -109,8 +109,12 @@ def load_ridership() -> None:
     print(f"CSV rows validated: {len(frame):,}")
     print(f"New rows inserted: {inserted:,}")
     print("Existing station-hour rows were skipped safely.")
+    return {
+        "validated_rows": int(len(frame)),
+        "inserted_rows": int(inserted),
+        "skipped_rows": int(len(frame) - inserted),
+    }
 
 
 if __name__ == "__main__":
     load_ridership()
-

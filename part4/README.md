@@ -6,6 +6,7 @@
 - Repeat-safe ETL and validation for 11,667 hourly observations
 - Persisted Random Forest production model using Joblib
 - Database-driven candidate-model retraining with a chronological train/test split
+- One-command data maintenance pipeline with JSON audit logs
 - Streamlit future congestion interface
 - Rule-based recommendation generation
 - User decision write-back
@@ -72,6 +73,14 @@ Retraining reads PostgreSQL `RIDERSHIP` data, applies a chronological 80/20 spli
 
 The candidate is evaluated separately and does not automatically replace the production model.
 
+## Run the data maintenance pipeline
+
+```powershell
+python run_pipeline.py
+```
+
+The pipeline checks database connectivity, validates and repeat-safely loads the configured CSV, retrains a candidate model with the chronological split, and verifies the final database row count. Each run writes a timestamped JSON audit log under `artifacts/pipeline_runs/`. The production model is never promoted automatically.
+
 ## Query optimization
 
 ```powershell
@@ -90,6 +99,7 @@ SQL and execution-plan evidence are stored in `sql/`, `artifacts/`, and `screens
 - `recommendation_service.py` - recommendation generation and write
 - `user_decision_service.py` - commuter decision write
 - `train_model.py` - database-driven retraining
+- `run_pipeline.py` - orchestrated ETL, retraining, verification, and audit logging
 
 ## Project documentation
 
