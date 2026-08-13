@@ -95,6 +95,7 @@ def predict_and_save(station_id: int, when: datetime) -> PredictionResult:
             prediction_time=when,
             congestion_level=predicted_level,
             confidence_score=round(confidence, 4),
+            model_version=str(bundle["model_version"]),
         )
         session.add(prediction)
         session.flush()

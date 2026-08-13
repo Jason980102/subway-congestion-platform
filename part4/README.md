@@ -79,7 +79,27 @@ The candidate is evaluated separately and does not automatically replace the pro
 python run_pipeline.py
 ```
 
-The pipeline checks database connectivity, validates and repeat-safely loads the configured CSV, retrains a candidate model with the chronological split, and verifies the final database row count. Each run writes a timestamped JSON audit log under `artifacts/pipeline_runs/`. The production model is never promoted automatically.
+The pipeline checks database connectivity and computes a SHA-256 fingerprint of the configured CSV. When the source changes, it validates and repeat-safely loads the data, retrains a candidate model with the chronological split, and verifies the final database row count. When the source is unchanged, ETL and retraining are skipped. Each run writes a timestamped JSON audit log under `artifacts/pipeline_runs/`. Use `python run_pipeline.py --force` for a deliberate full rerun. The production model is never promoted automatically.
+
+### Schedule automatic source monitoring on Windows
+
+Run PowerShell as the current user from the `part4` directory:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File automation/install_pipeline_task.ps1
+```
+
+This creates a daily Windows Task Scheduler job named `SubwayCongestionPart4Pipeline`. It runs at 2:00 AM and invokes the change-aware pipeline. To remove it:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File automation/remove_pipeline_task.ps1
+```
+
+The scheduler only launches the pipeline; source fingerprinting prevents unnecessary retraining. Task registration is an operational deployment step and is not required to inspect or run the repository manually.
+
+## Database migration for model traceability
+
+Existing databases must run `sql/migrations/001_add_prediction_model_version.sql`. New databases created from `sql/subway_schema.sql` already include the required `PREDICTION.model_version` column. Each new prediction now persists the Joblib bundle's model version.
 
 ## Query optimization
 

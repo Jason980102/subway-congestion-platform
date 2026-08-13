@@ -37,7 +37,7 @@ WORKFLOW_EXPLAIN = text(
     EXPLAIN (ANALYZE, BUFFERS)
     SELECT
         p.prediction_id, s.station_name, p.prediction_time,
-        p.congestion_level, p.confidence_score,
+        p.congestion_level, p.confidence_score, p.model_version,
         r.recommendation_id, r.recommended_route,
         r.suggested_departure_time,
         u.decision_id, u.user_action, u.decision_time

@@ -50,6 +50,7 @@ class Prediction(Base):
     prediction_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     congestion_level: Mapped[str | None] = mapped_column(String)
     confidence_score: Mapped[Decimal | None] = mapped_column(Numeric)
+    model_version: Mapped[str] = mapped_column(String(100), nullable=False)
 
 
 class Recommendation(Base):

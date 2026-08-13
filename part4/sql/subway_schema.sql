@@ -144,6 +144,7 @@ CREATE TABLE public.prediction (
     prediction_time timestamp without time zone NOT NULL,
     congestion_level character varying(20),
     confidence_score numeric(4,3),
+    model_version character varying(100) NOT NULL,
     CONSTRAINT prediction_confidence_score_check CHECK (((confidence_score >= (0)::numeric) AND (confidence_score <= (1)::numeric))),
     CONSTRAINT prediction_congestion_level_check CHECK (((congestion_level)::text = ANY ((ARRAY['Low'::character varying, 'Medium'::character varying, 'High'::character varying])::text[])))
 );
@@ -781,4 +782,3 @@ ALTER TABLE ONLY public.user_decision
 --
 
 \unrestrict X9afAvE81Amkzkc3CAAjn4RRIQofp5Bbo70PVjzhdBPGT4V9OPURPy3nVnteGTS
-

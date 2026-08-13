@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 import time
@@ -20,6 +21,7 @@ from train_model import train_and_save
 
 PROJECT_DIR = Path(__file__).resolve().parent
 DEFAULT_LOG_DIR = PROJECT_DIR / "artifacts" / "pipeline_runs"
+DEFAULT_STATE_FILE = PROJECT_DIR / "artifacts" / "pipeline_state.json"
 
 
 def utc_now() -> datetime:
@@ -34,6 +36,41 @@ def json_safe(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [json_safe(item) for item in value]
     return value
+
+
+def configured_csv_path() -> Path:
+    import os
+
+    value = os.getenv("CSV_PATH")
+    if not value:
+        raise RuntimeError("Missing required setting: CSV_PATH")
+    path = Path(value)
+    if not path.is_absolute():
+        path = PROJECT_DIR / path
+    if not path.is_file():
+        raise FileNotFoundError(f"CSV not found: {path}")
+    return path
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def read_state(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def write_state(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    temporary.replace(path)
 
 
 def check_database() -> dict[str, Any]:
@@ -102,7 +139,11 @@ def write_log(payload: dict[str, Any], log_directory: Path) -> Path:
     return path
 
 
-def run_pipeline(log_directory: Path = DEFAULT_LOG_DIR) -> Path:
+def run_pipeline(
+    log_directory: Path = DEFAULT_LOG_DIR,
+    state_file: Path = DEFAULT_STATE_FILE,
+    force: bool = False,
+) -> Path:
     started = utc_now()
     payload: dict[str, Any] = {
         "run_id": started.strftime("%Y%m%d_%H%M%S_utc"),
@@ -111,12 +152,30 @@ def run_pipeline(log_directory: Path = DEFAULT_LOG_DIR) -> Path:
         "stages": [],
     }
 
+    csv_path = configured_csv_path()
+    source_hash = sha256_file(csv_path)
+    previous_state = read_state(state_file)
+    source_changed = previous_state.get("source_sha256") != source_hash
+    payload["source"] = {
+        "path": str(csv_path),
+        "sha256": source_hash,
+        "changed_since_last_success": source_changed,
+        "forced": force,
+    }
+
     stages: list[tuple[str, Callable[[], Any]]] = [
         ("database_connectivity", check_database),
-        ("repeat_safe_etl", load_ridership),
-        ("candidate_model_retraining", train_and_save),
-        ("post_run_verification", verify_database),
     ]
+    if source_changed or force:
+        stages.extend(
+            [
+                ("repeat_safe_etl", load_ridership),
+                ("candidate_model_retraining", train_and_save),
+            ]
+        )
+    else:
+        payload["decision"] = "No source change; ETL and retraining skipped."
+    stages.append(("post_run_verification", verify_database))
 
     failed: Exception | None = None
     try:
@@ -135,6 +194,15 @@ def run_pipeline(log_directory: Path = DEFAULT_LOG_DIR) -> Path:
 
     if failed:
         raise failed
+    write_state(
+        state_file,
+        {
+            "source_path": str(csv_path),
+            "source_sha256": source_hash,
+            "last_successful_run": payload["finished_at"],
+            "last_log": str(log_path),
+        },
+    )
     return log_path
 
 
@@ -148,12 +216,23 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_LOG_DIR,
         help="Directory for timestamped JSON pipeline logs.",
     )
+    parser.add_argument(
+        "--state-file",
+        type=Path,
+        default=DEFAULT_STATE_FILE,
+        help="State file used to detect source-data changes.",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Run ETL and retraining even when the source hash is unchanged.",
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     arguments = parse_args()
     try:
-        run_pipeline(arguments.log_dir)
+        run_pipeline(arguments.log_dir, arguments.state_file, arguments.force)
     except Exception:
         sys.exit(1)
