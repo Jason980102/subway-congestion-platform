@@ -1,0 +1,64 @@
+CURRENT INDEXES
+prediction.idx_prediction_station_time: CREATE INDEX idx_prediction_station_time ON public.prediction USING btree (station_id, prediction_time)
+prediction.prediction_pkey: CREATE UNIQUE INDEX prediction_pkey ON public.prediction USING btree (prediction_id)
+recommendation.idx_recommendation_prediction: CREATE INDEX idx_recommendation_prediction ON public.recommendation USING btree (prediction_id)
+recommendation.recommendation_pkey: CREATE UNIQUE INDEX recommendation_pkey ON public.recommendation USING btree (recommendation_id)
+ridership.idx_ridership_station_date: CREATE INDEX idx_ridership_station_date ON public.ridership USING btree (station_id, record_date)
+ridership.ix_ridership_congestion: CREATE INDEX ix_ridership_congestion ON public.ridership USING btree (congestion_level)
+ridership.ix_ridership_timestamp: CREATE INDEX ix_ridership_timestamp ON public.ridership USING btree (transit_timestamp)
+ridership.ridership_pkey: CREATE UNIQUE INDEX ridership_pkey ON public.ridership USING btree (ridership_id)
+ridership.ux_ridership_station_timestamp: CREATE UNIQUE INDEX ux_ridership_station_timestamp ON public.ridership USING btree (station_id, transit_timestamp)
+station.idx_station_name: CREATE INDEX idx_station_name ON public.station USING btree (station_name)
+station.station_pkey: CREATE UNIQUE INDEX station_pkey ON public.station USING btree (station_id)
+station.ux_station_mta_complex_id: CREATE UNIQUE INDEX ux_station_mta_complex_id ON public.station USING btree (mta_complex_id)
+user_decision.ix_user_decision_recommendation: CREATE INDEX ix_user_decision_recommendation ON public.user_decision USING btree (recommendation_id)
+user_decision.user_decision_pkey: CREATE UNIQUE INDEX user_decision_pkey ON public.user_decision USING btree (decision_id)
+
+RIDERSHIP STATION/TIME QUERY
+Index Scan using ix_ridership_timestamp on ridership  (cost=8.45..19.63 rows=24 width=21) (actual time=0.027..0.041 rows=24.00 loops=1)
+  Index Cond: ((transit_timestamp >= '2024-12-01 00:00:00'::timestamp without time zone) AND (transit_timestamp < '2024-12-02 00:00:00'::timestamp without time zone))
+  Filter: (station_id = (InitPlan 1).col1)
+  Rows Removed by Filter: 72
+  Index Searches: 1
+  Buffers: shared hit=6
+  InitPlan 1
+    ->  Index Scan using ux_station_mta_complex_id on station  (cost=0.14..8.16 rows=1 width=4) (actual time=0.010..0.010 rows=1.00 loops=1)
+          Index Cond: (mta_complex_id = 16)
+          Index Searches: 1
+          Buffers: shared hit=2
+Planning:
+  Buffers: shared hit=166 dirtied=1
+Planning Time: 4.071 ms
+Execution Time: 0.108 ms
+
+END-TO-END WORKFLOW QUERY
+Nested Loop Left Join  (cost=4.62..37.30 rows=8 width=600) (actual time=0.060..0.062 rows=1.00 loops=1)
+  Buffers: shared hit=8
+  ->  Nested Loop  (cost=0.44..24.62 rows=1 width=530) (actual time=0.036..0.037 rows=1.00 loops=1)
+        Buffers: shared hit=6
+        ->  Nested Loop  (cost=0.29..16.45 rows=1 width=300) (actual time=0.025..0.025 rows=1.00 loops=1)
+              Buffers: shared hit=4
+              ->  Index Scan using prediction_pkey on prediction p  (cost=0.15..8.17 rows=1 width=86) (actual time=0.014..0.014 rows=1.00 loops=1)
+                    Index Cond: (prediction_id = 3)
+                    Index Searches: 1
+                    Buffers: shared hit=2
+              ->  Index Scan using station_pkey on station s  (cost=0.14..8.16 rows=1 width=222) (actual time=0.008..0.008 rows=1.00 loops=1)
+                    Index Cond: (station_id = p.station_id)
+                    Index Searches: 1
+                    Buffers: shared hit=2
+        ->  Index Scan using idx_recommendation_prediction on recommendation r  (cost=0.14..8.16 rows=1 width=234) (actual time=0.010..0.011 rows=1.00 loops=1)
+              Index Cond: (prediction_id = 3)
+              Index Searches: 1
+              Buffers: shared hit=2
+  ->  Bitmap Heap Scan on user_decision u  (cost=4.18..12.64 rows=4 width=74) (actual time=0.023..0.024 rows=1.00 loops=1)
+        Recheck Cond: (recommendation_id = r.recommendation_id)
+        Heap Blocks: exact=1
+        Buffers: shared hit=2
+        ->  Bitmap Index Scan on ix_user_decision_recommendation  (cost=0.00..4.18 rows=4 width=0) (actual time=0.005..0.005 rows=1.00 loops=1)
+              Index Cond: (recommendation_id = r.recommendation_id)
+              Index Searches: 1
+              Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=152
+Planning Time: 3.964 ms
+Execution Time: 0.107 ms
