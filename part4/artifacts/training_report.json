@@ -13,8 +13,8 @@
     "Medium"
   ],
   "accuracy": 0.7675213675213676,
-  "trained_at": "2026-08-09T21:56:02.891294+00:00",
-  "model_version": "random_forest_20260809_215602_utc",
+  "trained_at": "2026-08-13T00:21:17.165660+00:00",
+  "model_version": "random_forest_20260813_002117_utc",
   "training_rows": 9327,
   "test_rows": 2340,
   "training_start": "2024-09-01T07:00:00",
