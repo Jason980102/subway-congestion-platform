@@ -33,13 +33,27 @@ Copy-Item .env.example .env
 
 The committed CSV and production model use repository-relative paths. The real `.env` is excluded from Git.
 
+## Create or restore the PostgreSQL database
+
+Create a PostgreSQL database named `subway_congestion_db`. From pgAdmin Query Tool, connect to that database and run these files in order:
+
+1. `sql/subway_schema.sql` - creates the tables, keys, constraints, indexes, and materialized view.
+2. `sql/station_seed.sql` - inserts the four NYU-area stations required by the application.
+
+Then load the cleaned hourly ridership data:
+
+```powershell
+python load_data.py
+```
+
+The loader is repeat-safe, so running it again does not duplicate the same station/timestamp observations.
+
 ## Run the application
 
 From the `part4` directory:
 
 ```powershell
 python test_connection.py
-python load_data.py
 python -m streamlit run app.py
 ```
 
@@ -76,6 +90,17 @@ SQL and execution-plan evidence are stored in `sql/`, `artifacts/`, and `screens
 - `recommendation_service.py` - recommendation generation and write
 - `user_decision_service.py` - commuter decision write
 - `train_model.py` - database-driven retraining
+
+## Project documentation
+
+The final reports for all four project phases are available in `docs/`:
+
+- `Jason_Chen_p1_su26.docx`
+- `Jason_Chen_p2_su26.docx`
+- `Jason_Chen_p3_su26.docx`
+- `Jason_Chen_p4_su26.docx`
+
+The Part IV report contains the integrated workflow, implementation evidence, query-plan results, limitations, and updated reference architecture.
 
 ## Demonstrated result
 
