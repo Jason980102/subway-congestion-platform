@@ -41,15 +41,38 @@ class Ridership(Base):
     station: Mapped[Station] = relationship(back_populates="ridership_records")
 
 
+class Event(Base):
+    __tablename__ = "event"
+
+    event_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    station_id: Mapped[int] = mapped_column(
+        ForeignKey("station.station_id"), nullable=False
+    )
+    event_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    event_type: Mapped[str | None] = mapped_column(String(100))
+    location: Mapped[str | None] = mapped_column(String(200))
+    start_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    end_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expected_attendance: Mapped[int | None] = mapped_column(Integer)
+    source_event_id: Mapped[str | None] = mapped_column(String(50), unique=True)
+    event_agency: Mapped[str | None] = mapped_column(String(150))
+    street_closure_type: Mapped[str | None] = mapped_column(String(100))
+    risk_level: Mapped[str | None] = mapped_column(String(20))
+
+
 class Prediction(Base):
     __tablename__ = "prediction"
 
     prediction_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     station_id: Mapped[int] = mapped_column(ForeignKey("station.station_id"), nullable=False)
-    event_id: Mapped[int | None] = mapped_column(Integer)
+    event_id: Mapped[int | None] = mapped_column(ForeignKey("event.event_id"))
     prediction_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     congestion_level: Mapped[str | None] = mapped_column(String)
     confidence_score: Mapped[Decimal | None] = mapped_column(Numeric)
+    model_version: Mapped[str] = mapped_column(String(100), nullable=False)
+    baseline_congestion_level: Mapped[str | None] = mapped_column(String(20))
+    event_adjustment_levels: Mapped[int | None] = mapped_column(Integer)
+    event_adjustment_method: Mapped[str | None] = mapped_column(String(100))
 
 
 class Recommendation(Base):

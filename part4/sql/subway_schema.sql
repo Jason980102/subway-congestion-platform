@@ -32,14 +32,20 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.event (
     event_id integer NOT NULL,
+    station_id integer NOT NULL,
     event_name character varying(200) NOT NULL,
     event_type character varying(100),
     location character varying(200),
     start_time timestamp without time zone NOT NULL,
     end_time timestamp without time zone NOT NULL,
     expected_attendance integer,
+    source_event_id character varying(50),
+    event_agency character varying(150),
+    street_closure_type character varying(100),
+    risk_level character varying(20),
     CONSTRAINT event_check CHECK ((end_time >= start_time)),
-    CONSTRAINT event_expected_attendance_check CHECK ((expected_attendance >= 0))
+    CONSTRAINT event_expected_attendance_check CHECK ((expected_attendance >= 0)),
+    CONSTRAINT event_risk_level_check CHECK (((risk_level IS NULL) OR ((risk_level)::text = ANY ((ARRAY['Low'::character varying, 'Medium'::character varying, 'High'::character varying])::text[])))
 );
 
 
@@ -144,8 +150,14 @@ CREATE TABLE public.prediction (
     prediction_time timestamp without time zone NOT NULL,
     congestion_level character varying(20),
     confidence_score numeric(4,3),
+    model_version character varying(100) NOT NULL,
+    baseline_congestion_level character varying(20),
+    event_adjustment_levels integer,
+    event_adjustment_method character varying(100),
     CONSTRAINT prediction_confidence_score_check CHECK (((confidence_score >= (0)::numeric) AND (confidence_score <= (1)::numeric))),
-    CONSTRAINT prediction_congestion_level_check CHECK (((congestion_level)::text = ANY ((ARRAY['Low'::character varying, 'Medium'::character varying, 'High'::character varying])::text[])))
+    CONSTRAINT prediction_congestion_level_check CHECK (((congestion_level)::text = ANY ((ARRAY['Low'::character varying, 'Medium'::character varying, 'High'::character varying])::text[]))),
+    CONSTRAINT prediction_baseline_level_check CHECK (((baseline_congestion_level IS NULL) OR ((baseline_congestion_level)::text = ANY ((ARRAY['Low'::character varying, 'Medium'::character varying, 'High'::character varying])::text[]))),
+    CONSTRAINT prediction_event_adjustment_check CHECK (((event_adjustment_levels IS NULL) OR ((event_adjustment_levels >= 0) AND (event_adjustment_levels <= 2))))
 );
 
 
@@ -638,6 +650,10 @@ ALTER TABLE ONLY public.user_decision
 
 CREATE INDEX idx_event_start_time ON public.event USING btree (start_time);
 
+CREATE INDEX ix_event_station_time ON public.event USING btree (station_id, start_time, end_time);
+
+CREATE UNIQUE INDEX ux_event_source_event_id ON public.event USING btree (source_event_id) WHERE (source_event_id IS NOT NULL);
+
 
 --
 -- TOC entry 4953 (class 1259 OID 16533)
@@ -719,6 +735,9 @@ CREATE UNIQUE INDEX ux_station_mta_complex_id ON public.station USING btree (mta
 ALTER TABLE ONLY public.prediction
     ADD CONSTRAINT fk_prediction_event FOREIGN KEY (event_id) REFERENCES public.event(event_id);
 
+ALTER TABLE ONLY public.event
+    ADD CONSTRAINT fk_event_station FOREIGN KEY (station_id) REFERENCES public.station(station_id);
+
 
 --
 -- TOC entry 4966 (class 2606 OID 16490)
@@ -781,4 +800,3 @@ ALTER TABLE ONLY public.user_decision
 --
 
 \unrestrict X9afAvE81Amkzkc3CAAjn4RRIQofp5Bbo70PVjzhdBPGT4V9OPURPy3nVnteGTS
-

@@ -127,6 +127,10 @@ if submitted:
                 "confidence_score": prediction.confidence_score,
                 "estimated_transfers": prediction.estimated_transfers,
                 "model_version": prediction.model_version,
+                "event_id": prediction.event_id,
+                "event_name": prediction.event_name,
+                "baseline_congestion_level": prediction.baseline_congestion_level,
+                "event_adjustment": prediction.event_adjustment,
                 "recommendation_id": recommendation.recommendation_id,
                 "recommended_route": recommendation.recommended_route,
                 "suggested_departure_time": recommendation.suggested_departure_time,
@@ -154,7 +158,7 @@ if workflow:
         f"{workflow['congestion_level']}",
     )
     confidence_col.metric(
-        "Model confidence",
+        "Baseline model confidence",
         f"{workflow['confidence_score']:.1%}",
     )
 
@@ -163,6 +167,13 @@ if workflow:
         f"**Requested time:** {workflow['prediction_time']:%Y-%m-%d %I:%M %p}  \n"
         f"**Estimated transfers:** {workflow['estimated_transfers']:.2f}"
     )
+    if workflow["event_id"] is not None:
+        st.warning(
+            f"Official nearby event detected: {workflow['event_name']} "
+            f"(Database Event ID {workflow['event_id']})  \n"
+            f"Random Forest baseline: {workflow['baseline_congestion_level']}  \n"
+            f"{workflow['event_adjustment']}"
+        )
 
     st.subheader("Recommended action")
     st.info(workflow["recommended_route"])

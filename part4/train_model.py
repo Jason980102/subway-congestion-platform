@@ -76,7 +76,7 @@ def chronological_split(
     return train_frame, test_frame, cutoff.to_pydatetime()
 
 
-def train_and_save() -> None:
+def train_and_save() -> dict:
     frame = read_training_data()
     train_frame, test_frame, cutoff = chronological_split(frame)
 
@@ -145,6 +145,7 @@ def train_and_save() -> None:
     print(f"Model saved: {model_path}")
     print(f"Evaluation saved: {report_path}")
     print("The current production model was not overwritten.")
+    return evaluation
 
 
 if __name__ == "__main__":

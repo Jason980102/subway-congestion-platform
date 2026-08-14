@@ -38,6 +38,13 @@ SELECT
     p.prediction_time,
     p.congestion_level,
     p.confidence_score,
+    p.model_version,
+    p.baseline_congestion_level,
+    p.event_adjustment_levels,
+    p.event_adjustment_method,
+    e.source_event_id,
+    e.event_name,
+    e.risk_level,
     r.recommendation_id,
     r.recommended_route,
     r.suggested_departure_time,
@@ -47,6 +54,8 @@ SELECT
 FROM prediction p
 JOIN station s
     ON s.station_id = p.station_id
+LEFT JOIN event e
+    ON e.event_id = p.event_id
 JOIN recommendation r
     ON r.prediction_id = p.prediction_id
 LEFT JOIN user_decision u
