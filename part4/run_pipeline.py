@@ -17,6 +17,7 @@ from database import SessionLocal
 from load_data import load_ridership
 from models import Ridership
 from train_model import train_and_save
+from event_service import sync_official_events
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -165,6 +166,7 @@ def run_pipeline(
 
     stages: list[tuple[str, Callable[[], Any]]] = [
         ("database_connectivity", check_database),
+        ("official_event_sync", sync_official_events),
     ]
     if source_changed or force:
         stages.extend(
