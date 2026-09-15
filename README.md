@@ -55,7 +55,24 @@ The primary implementation is located in [`part4/`](./part4).
 ```text
 subway-congestion-platform/
 ├── part4/
-│   ├── ...
-│   └── .env.example
+│   ├── app.py                         # Streamlit application entry point
+│   ├── database.py                    # Database connection and configuration
+│   ├── models.py                      # SQLAlchemy data models
+│   ├── prediction_service.py          # Congestion prediction workflow
+│   ├── recommendation_service.py      # Recommendation generation and persistence
+│   ├── user_decision_service.py       # Commuter decision tracking
+│   ├── event_service.py               # External event data integration
+│   ├── load_data.py                   # Ridership data loading
+│   ├── train_model.py                 # Random Forest model training
+│   ├── run_pipeline.py                # Data/model pipeline orchestration
+│   ├── analyze_queries.py             # Database query analysis
+│   ├── sql/                           # SQL scripts and database setup
+│   ├── automation/                    # Automated data/model workflows
+│   ├── artifacts/                     # Persisted model artifacts
+│   ├── data/                          # Project data
+│   ├── docs/                          # Supporting documentation
+│   ├── screenshots/                   # Application screenshots
+│   ├── requirements.txt               # Python dependencies
+│   └── .env.example                   # Environment configuration template
 ├── .gitignore
 └── README.md
