@@ -4,6 +4,26 @@ An end-to-end decision support application that combines historical MTA ridershi
 
 Originally developed as a Database Systems project for **CSCI-GA.2433-001 at New York University**.
 
+## Demo
+
+The application accepts a future subway trip request, incorporates relevant event context, predicts congestion, generates a recommendation, and persists the resulting commuter decision in PostgreSQL.
+
+![Event-aware prediction and commuter decision](part4/screenshots/12_event_aware_result_and_decision.png)
+
+<details>
+<summary>View additional workflow screenshots</summary>
+
+### Future Trip Request
+![Future trip request](part4/screenshots/10_future_request_input.png)
+
+### Event-Aware Request
+![Event-aware request](part4/screenshots/11_event_aware_request.png)
+
+### Database Audit
+![Database audit](part4/screenshots/13_event_aware_database_audit.png)
+
+</details>
+
 ## Tech Stack
 
 - **Backend & Database:** Python, PostgreSQL, SQLAlchemy
